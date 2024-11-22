@@ -9,7 +9,6 @@ export default function VideoGallery() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  // Fetch videos on mount
   useEffect(() => {
     const fetchVideos = async () => {
       try {
@@ -38,7 +37,7 @@ export default function VideoGallery() {
           <div
             key={video.id}
             className="video-item cursor-pointer border rounded-lg p-2 hover:shadow-lg"
-            onClick={() => router.push(`/video/${encodeURIComponent(video.id)}`)} // Navigate to video page
+            onClick={() => router.push(`/video/${encodeURIComponent(video.id)}`)}
           >
             <img
               src={video.thumbnailUrl}
