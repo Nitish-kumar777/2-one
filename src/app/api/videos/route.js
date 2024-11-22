@@ -6,46 +6,24 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function GET(req) {
+export async function GET() {
   try {
-    // Fetch all videos in the "anime" folder
     const { resources } = await cloudinary.search
-      .expression('folder:anime/* AND resource_type:video')
-      .with_field('context')
-      .with_field('tags')
-      .max_results(20)  // Adjust max results as needed
+      .expression('folder:anime-videos/*')
+      .sort_by('created_at', 'desc')
+      .max_results(10)
       .execute();
 
-    // Process the videos data
-    const videos = resources.map((video) => {
-      const title = video.public_id.split('/').pop(); // Extract title from public_id
+    const videos = resources.map((resource) => ({
+      id: resource.public_id,
+      title: resource.folder.split('/').pop(),
+      thumbnailUrl: resource.secure_url,
+      videoUrl: resource.secure_url,
+      uploadDate: resource.created_at,
+    }));
 
-      // Construct the thumbnail URL based on naming convention
-      const thumbnailUrl = cloudinary.url(`anime/${title}_thumbnail`, {
-        resource_type: 'image',
-        secure: true,
-      });
-
-      return {
-        title,
-        url: video.secure_url,
-        thumbnailUrl,
-        previewUrl: `${video.secure_url}#t=0,5`, // 5-second preview
-        public_id: video.public_id,
-        format: video.format,
-        uploaded_at: video.created_at,
-        size: video.bytes,
-      };
-    });
-
-    return new Response(JSON.stringify(videos), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(JSON.stringify(videos), { status: 200 });
   } catch (error) {
-    console.error('Error fetching videos:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch videos' }), {
-      status: 500,
-    });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }
