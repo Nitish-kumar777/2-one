@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 export default function VideoPage() {
   const { id } = useParams(); // Get the video ID from the URL
@@ -12,9 +12,9 @@ export default function VideoPage() {
   useEffect(() => {
     const fetchVideo = async () => {
       try {
-        const res = await fetch(`/api/videos/[id]/${encodeURIComponent(id)}`);
-        if (!res.ok) throw new Error('Failed to fetch video details');
-        const data = await res.json();
+        const response = await fetch(`/api/videos/${encodeURIComponent(id)}`);
+        if (!response.ok) throw new Error('Failed to fetch video details');
+        const data = await response.json();
         setVideo(data);
       } catch (err) {
         setError(err.message);
@@ -23,20 +23,22 @@ export default function VideoPage() {
       }
     };
 
-    fetchVideo();
+    if (id) {
+      fetchVideo();
+    }
   }, [id]);
 
   if (loading) return <p>Loading video...</p>;
   if (error) return <p>Error: {error}</p>;
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-4">{video.title}</h1>
-      <video controls className="w-full rounded-lg">
+    <div>
+      <h1>{video.title}</h1>
+      <video controls>
         <source src={video.videoUrl} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
-      <p className="mt-4 text-gray-700">Uploaded on: {new Date(video.uploadDate).toLocaleDateString()}</p>
+      <p>Uploaded on: {new Date(video.uploadDate).toLocaleDateString()}</p>
     </div>
   );
 }
