@@ -1,7 +1,6 @@
-'use client';
+ 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 
 export default function VideoGallery() {
   const [videos, setVideos] = useState([]);
@@ -9,19 +8,20 @@ export default function VideoGallery() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/videos')
-      .then((res) => {
+    const fetchVideos = async () => {
+      try {
+        const res = await fetch('/api/videos');
         if (!res.ok) throw new Error('Failed to fetch videos');
-        return res.json();
-      })
-      .then((data) => {
+        const data = await res.json();
         setVideos(data);
-        setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         setError(err.message);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchVideos();
   }, []);
 
   if (loading) return <p>Loading videos...</p>;
@@ -33,13 +33,13 @@ export default function VideoGallery() {
       <div className="gallery">
         {videos.map((video) => (
           <div key={video.id} className="video-item">
-            <Link href={`/videos/${video.id}`}>
-              <img src={video.thumbnailUrl} alt={video.title} />
-            </Link>
+            <img src={video.thumbnailUrl} alt={video.title} />
             <p>{video.title}</p>
           </div>
         ))}
       </div>
     </div>
+  );
+}
   );
 }
