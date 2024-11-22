@@ -19,3 +19,26 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.video-item {
+  width: 200px;
+  cursor: pointer;
+}
+
+.video-item img {
+  width: 100%;
+  height: auto;
+}
+
+video {
+  width: 100%;
+  max-width: 800px;
+  margin-top: 20px;
+}
