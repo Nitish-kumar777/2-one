@@ -8,25 +8,25 @@ cloudinary.config({
 
 export async function GET(req) {
   try {
-    // Fetch resources from the '18+anime' folder
+    // Fetch resources from Cloudinary
     const { resources } = await cloudinary.search
-      .expression('folder:18+anime/*') // Update folder path
-      .sort_by('created_at', 'desc') // Sort by most recently uploaded
-      .max_results(10) // Limit results to 10
+      .expression('folder:18+anime-videos/*') // Folder path
+      .sort_by('created_at', 'desc') // Sort by most recent
+      .max_results(100) // Limit results
       .execute();
 
-    // Map Cloudinary resources to a structured response
+    // Map the results to a structured response
     const videos = resources.map((resource) => ({
-      id: resource.public_id, // Unique identifier
-      title: resource.public_id.split('/').pop(), // Extract the title from the public ID
-      thumbnailUrl: cloudinary.url(resource.public_id, { format: 'jpg' }), // Thumbnail URL in JPG format
-      videoUrl: resource.secure_url, // Secure video URL
+      id: resource.public_id,
+      title: resource.public_id.split('/').pop(), // Extract title from public ID
+      thumbnailUrl: cloudinary.url(resource.public_id, { format: 'jpg' }), // Thumbnail
+      videoUrl: resource.secure_url, // Video URL
       uploadDate: resource.created_at, // Upload date
     }));
 
     return new Response(JSON.stringify(videos), { status: 200 });
   } catch (error) {
-    console.error('Cloudinary API Error:', error); // Log error for debugging
+    console.error('Cloudinary API Error:', error);
     return new Response(JSON.stringify({ error: 'Failed to fetch videos' }), { status: 500 });
   }
 }
