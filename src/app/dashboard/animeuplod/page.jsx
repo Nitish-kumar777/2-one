@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -7,11 +6,9 @@ export default function VideoUploadForm() {
   const [videoFile, setVideoFile] = useState(null);
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [title, setTitle] = useState('');
-  const [previewDuration, setPreviewDuration] = useState(5);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const handleFileChange = (e) => {
+  const handleVideoChange = (e) => {
     setVideoFile(e.target.files[0]);
   };
 
@@ -20,74 +17,49 @@ export default function VideoUploadForm() {
   };
 
   const handleUpload = async () => {
-    if (!videoFile || !title) {
-      alert("Please provide a video file and title.");
+    if (!videoFile || !thumbnailFile || !title) {
+      alert("Please fill all fields!");
       return;
     }
 
-    setIsUploading(true);
-    setUploadProgress(0);
+    setUploading(true);
 
-    // Read video file as base64
-    const videoData = await readFileAsBase64(videoFile);
-    const thumbnailData = thumbnailFile ? await readFileAsBase64(thumbnailFile) : null;
+    const uploadToCloudinary = async (file, uploadPreset) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "18+anime"); // यहाँ पर अपना preset डालें
+      formData.append("folder", "18+anime-videos"); // फोल्डर जहाँ वीडियो सेव होगा
 
-    const payload = {
-      videoData,
-      title,
-      thumbnailData,
-      previewDuration,
+      const res = await fetch("https://api.cloudinary.com/v1_1/dzjzkjsiq/auto/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+      return await res.json();
     };
 
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/upload", true);
-    xhr.setRequestHeader("Content-Type", "application/json");
+    try {
+      // Video Upload
+      const videoResponse = await uploadToCloudinary(videoFile, "video_upload_preset");
 
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const percentComplete = Math.round((event.loaded / event.total) * 100);
-        setUploadProgress(percentComplete);
-      }
-    };
+      // Thumbnail Upload
+      const thumbnailResponse = await uploadToCloudinary(thumbnailFile, "thumbnail_upload_preset");
 
-    xhr.onload = () => {
-      setIsUploading(false);
-      if (xhr.status === 200) {
-        alert("Video uploaded successfully!");
-        resetForm();
-      } else {
-        alert("Upload failed. Please try again.");
-        console.error("Error:", xhr.responseText);
-      }
-    };
+      console.log("Video URL:", videoResponse.secure_url);
+      console.log("Thumbnail URL:", thumbnailResponse.secure_url);
 
-    xhr.onerror = () => {
-      setIsUploading(false);
-      alert("An error occurred during the upload.");
-    };
-
-    xhr.send(JSON.stringify(payload));
-  };
-
-  const readFileAsBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  const resetForm = () => {
-    setTitle('');
-    setVideoFile(null);
-    setThumbnailFile(null);
-    setPreviewDuration(5);
-    setUploadProgress(0);
+      alert("Video and Thumbnail uploaded successfully!");
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-gray-800 rounded-lg shadow-md mt-2">
+    <div className="max-w-md mx-auto p-6 bg-gray-800 rounded-lg shadow-md mt-4">
       <h2 className="text-2xl font-semibold text-white mb-6">Upload Video</h2>
 
       <input
@@ -101,7 +73,7 @@ export default function VideoUploadForm() {
       <input
         type="file"
         accept="video/*"
-        onChange={handleFileChange}
+        onChange={handleVideoChange}
         className="w-full p-2 mb-4 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
 
@@ -112,32 +84,12 @@ export default function VideoUploadForm() {
         className="w-full p-2 mb-4 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
 
-      <p className="text-white mb-2">Preview Duration (seconds):</p>
-      <input
-        type="number"
-        placeholder="Preview duration"
-        value={previewDuration}
-        onChange={(e) => setPreviewDuration(Number(e.target.value))}
-        className="w-full p-2 mb-4 text-black rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-      />
-
-      {isUploading && (
-        <div className="w-full mb-4 bg-gray-300 rounded">
-          <div
-            className="h-4 bg-teal-600 rounded"
-            style={{ width: `${uploadProgress}%` }}
-          ></div>
-        </div>
-      )}
-
-      <p className="text-white">{isUploading ? `${uploadProgress}% uploaded` : ""}</p>
-
       <button
         onClick={handleUpload}
         className="w-full py-2 bg-teal-600 text-white font-semibold rounded hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
-        disabled={isUploading}
+        disabled={uploading}
       >
-        {isUploading ? "Uploading..." : "Upload Video"}
+        {uploading ? "Uploading..." : "Upload Video"}
       </button>
     </div>
   );
