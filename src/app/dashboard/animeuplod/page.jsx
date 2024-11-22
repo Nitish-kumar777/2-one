@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -19,13 +20,17 @@ export default function VideoUploadForm() {
   };
 
   const handleUpload = async () => {
-    if (!videoFile || !title) return;
+    if (!videoFile || !title) {
+      alert("Please provide a video file and title.");
+      return;
+    }
 
     setIsUploading(true);
     setUploadProgress(0);
 
-    const videoData = await fileToBase64(videoFile);
-    const thumbnailData = thumbnailFile ? await fileToBase64(thumbnailFile) : null;
+    // Read video file as base64
+    const videoData = await readFileAsBase64(videoFile);
+    const thumbnailData = thumbnailFile ? await readFileAsBase64(thumbnailFile) : null;
 
     const payload = {
       videoData,
@@ -48,34 +53,43 @@ export default function VideoUploadForm() {
     xhr.onload = () => {
       setIsUploading(false);
       if (xhr.status === 200) {
-        alert("Video uploaded successfully");
-        setUploadProgress(0);
+        alert("Video uploaded successfully!");
+        resetForm();
       } else {
-        console.error('Upload error:', xhr.responseText);
+        alert("Upload failed. Please try again.");
+        console.error("Error:", xhr.responseText);
       }
     };
 
     xhr.onerror = () => {
       setIsUploading(false);
-      console.error("An error occurred during the upload.");
+      alert("An error occurred during the upload.");
     };
 
     xhr.send(JSON.stringify(payload));
   };
 
-  const fileToBase64 = (file) => {
+  const readFileAsBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onloadend = () => resolve(reader.result);
+      reader.onload = () => resolve(reader.result);
       reader.onerror = (error) => reject(error);
     });
+  };
+
+  const resetForm = () => {
+    setTitle('');
+    setVideoFile(null);
+    setThumbnailFile(null);
+    setPreviewDuration(5);
+    setUploadProgress(0);
   };
 
   return (
     <div className="max-w-md mx-auto p-6 bg-gray-800 rounded-lg shadow-md mt-2">
       <h2 className="text-2xl font-semibold text-white mb-6">Upload Video</h2>
-      
+
       <input
         type="text"
         placeholder="Enter video title"
@@ -83,24 +97,25 @@ export default function VideoUploadForm() {
         onChange={(e) => setTitle(e.target.value)}
         className="w-full p-2 mb-4 text-black rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
-      
+
       <input
         type="file"
         accept="video/*"
         onChange={handleFileChange}
         className="w-full p-2 mb-4 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
-      
+
       <input
         type="file"
         accept="image/*"
         onChange={handleThumbnailChange}
         className="w-full p-2 mb-4 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
-      <p>Preview Duration time in sec</p>
+
+      <p className="text-white mb-2">Preview Duration (seconds):</p>
       <input
         type="number"
-        placeholder="Preview duration (seconds)"
+        placeholder="Preview duration"
         value={previewDuration}
         onChange={(e) => setPreviewDuration(Number(e.target.value))}
         className="w-full p-2 mb-4 text-black rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -114,6 +129,7 @@ export default function VideoUploadForm() {
           ></div>
         </div>
       )}
+
       <p className="text-white">{isUploading ? `${uploadProgress}% uploaded` : ""}</p>
 
       <button
