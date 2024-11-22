@@ -7,6 +7,8 @@ export default function VideoUploadForm() {
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [title, setTitle] = useState('');
   const [previewDuration, setPreviewDuration] = useState(5);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFileChange = (e) => {
     setVideoFile(e.target.files[0]);
@@ -19,21 +21,46 @@ export default function VideoUploadForm() {
   const handleUpload = async () => {
     if (!videoFile || !title) return;
 
+    setIsUploading(true);
+    setUploadProgress(0);
+
     const videoData = await fileToBase64(videoFile);
     const thumbnailData = thumbnailFile ? await fileToBase64(thumbnailFile) : null;
 
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoData, title, thumbnailData, previewDuration }),
-    });
+    const payload = {
+      videoData,
+      title,
+      thumbnailData,
+      previewDuration,
+    };
 
-    const data = await response.json();
-    if (response.ok) {
-      alert("Video uploaded successfully");
-    } else {
-      console.error('Upload error:', data.error);
-    }
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/upload", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = Math.round((event.loaded / event.total) * 100);
+        setUploadProgress(percentComplete);
+      }
+    };
+
+    xhr.onload = () => {
+      setIsUploading(false);
+      if (xhr.status === 200) {
+        alert("Video uploaded successfully");
+        setUploadProgress(0);
+      } else {
+        console.error('Upload error:', xhr.responseText);
+      }
+    };
+
+    xhr.onerror = () => {
+      setIsUploading(false);
+      console.error("An error occurred during the upload.");
+    };
+
+    xhr.send(JSON.stringify(payload));
   };
 
   const fileToBase64 = (file) => {
@@ -78,12 +105,23 @@ export default function VideoUploadForm() {
         onChange={(e) => setPreviewDuration(Number(e.target.value))}
         className="w-full p-2 mb-4 text-black rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
-      
+
+      {isUploading && (
+        <div className="w-full mb-4 bg-gray-300 rounded">
+          <div
+            className="h-4 bg-teal-600 rounded"
+            style={{ width: `${uploadProgress}%` }}
+          ></div>
+        </div>
+      )}
+      <p className="text-white">{isUploading ? `${uploadProgress}% uploaded` : ""}</p>
+
       <button
         onClick={handleUpload}
         className="w-full py-2 bg-teal-600 text-white font-semibold rounded hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+        disabled={isUploading}
       >
-        Upload Video
+        {isUploading ? "Uploading..." : "Upload Video"}
       </button>
     </div>
   );
