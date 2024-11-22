@@ -8,23 +8,25 @@ cloudinary.config({
 
 export async function GET(req) {
   try {
+    // Fetch resources from the '18+anime' folder
     const { resources } = await cloudinary.search
-      .expression('folder:anime-videos/*') // Folder where videos are stored
-      .sort_by('created_at', 'desc')
-      .max_results(10)
+      .expression('folder:18+anime/*') // Update folder path
+      .sort_by('created_at', 'desc') // Sort by most recently uploaded
+      .max_results(10) // Limit results to 10
       .execute();
 
+    // Map Cloudinary resources to a structured response
     const videos = resources.map((resource) => ({
-      id: resource.public_id,
-      title: resource.public_id.split('/').pop(),
-      thumbnailUrl: cloudinary.url(resource.public_id, { format: 'jpg' }),
-      videoUrl: resource.secure_url,
-      uploadDate: resource.created_at,
+      id: resource.public_id, // Unique identifier
+      title: resource.public_id.split('/').pop(), // Extract the title from the public ID
+      thumbnailUrl: cloudinary.url(resource.public_id, { format: 'jpg' }), // Thumbnail URL in JPG format
+      videoUrl: resource.secure_url, // Secure video URL
+      uploadDate: resource.created_at, // Upload date
     }));
 
     return new Response(JSON.stringify(videos), { status: 200 });
   } catch (error) {
-    console.error('Cloudinary API Error:', error);
+    console.error('Cloudinary API Error:', error); // Log error for debugging
     return new Response(JSON.stringify({ error: 'Failed to fetch videos' }), { status: 500 });
   }
 }
