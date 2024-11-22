@@ -1,46 +1,34 @@
-import { v2 as cloudinary } from 'cloudinary';
+'use client';
 
-export default async function VideoPage({ params }) {
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+export default function VideoPage({ params }) {
   const { id } = params;
+  const [video, setVideo] = useState(null);
 
-  // Fetch video details directly from Cloudinary API
-  const video = await fetchVideoDetails(id);
+  useEffect(() => {
+    const fetchVideo = async () => {
+      try {
+        const res = await fetch(`/api/videos/${encodeURIComponent(id)}`);
+        const data = await res.json();
+        setVideo(data);
+      } catch (error) {
+        console.error('Error fetching video:', error);
+      }
+    };
 
-  if (!video) {
-    return <p>Video not found</p>;
-  }
+    fetchVideo();
+  }, [id]);
+
+  if (!video) return <p>Loading video...</p>;
 
   return (
     <div className="container mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold mb-4">{video.title}</h1>
-      <video
-        controls
-        className="w-full max-w-screen-lg mx-auto rounded-md"
-        src={video.videoUrl}
-      />
-      <p className="mt-4 text-gray-600">Uploaded on: {new Date(video.uploadDate).toLocaleDateString()}</p>
+      <video controls className="w-full rounded-lg">
+        <source src={video.videoUrl} type="video/mp4" />
+      </video>
     </div>
   );
-}
-
-async function fetchVideoDetails(id) {
-  try {
-    cloudinary.config({
-      cloud_name: "dzjzkjsiq",
-      api_key: "619215599177211",
-      api_secret: "jgSItJGT8rUlEGl6E9c4Kd1frlY",
-    });
-
-    const resource = await cloudinary.api.resource(id, { resource_type: 'video' });
-
-    return {
-      id: resource.public_id,
-      title: resource.public_id.split('/').pop(),
-      videoUrl: resource.secure_url,
-      uploadDate: resource.created_at,
-    };
-  } catch (error) {
-    console.error('Failed to fetch video details:', error);
-    return null;
-  }
 }
