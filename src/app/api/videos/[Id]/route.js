@@ -7,9 +7,11 @@ cloudinary.config({
 });
 
 export async function GET(req, { params }) {
-  const { id } = params; // Extract video ID from URL
+  const { id } = params;
+
   try {
-    const resource = await cloudinary.api.resource(id); // Fetch video details from Cloudinary
+    // Fetch video details using the Cloudinary API
+    const resource = await cloudinary.api.resource(id);
 
     const video = {
       id: resource.public_id,
@@ -21,7 +23,7 @@ export async function GET(req, { params }) {
 
     return new Response(JSON.stringify(video), { status: 200 });
   } catch (error) {
-    console.error('Cloudinary API Error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch video' }), { status: 500 });
+    console.error('Error fetching video:', error.message);
+    return new Response(JSON.stringify({ error: 'Video not found' }), { status: 404 });
   }
 }
