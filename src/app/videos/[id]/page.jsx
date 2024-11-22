@@ -12,7 +12,7 @@ export default function VideoPage() {
   useEffect(() => {
     const fetchVideo = async () => {
       try {
-        const res = await fetch(`/api/videos/${encodeURIComponent(id)}`);
+        const res = await fetch(`/api/videos/[id]/${encodeURIComponent(id)}`);
         if (!res.ok) throw new Error('Failed to fetch video details');
         const data = await res.json();
         setVideo(data);
