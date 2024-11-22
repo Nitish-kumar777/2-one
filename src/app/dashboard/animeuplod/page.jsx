@@ -22,7 +22,7 @@ export default function VideoUploadForm() {
     const videoData = await fileToBase64(videoFile);
     const thumbnailData = thumbnailFile ? await fileToBase64(thumbnailFile) : null;
 
-    const response = await fetch('/api/uploadVideo', {
+    const response = await fetch('/api/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoData, title, thumbnailData, previewDuration }),
