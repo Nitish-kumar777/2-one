@@ -1,0 +1,104 @@
+.container {
+  position: fixed;
+  top: 0px;
+  left: 0;
+  width: 250px;
+  height: calc(100vh - 40px);
+  background-color: #182237;
+  color: white;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+  z-index: 1000;
+}
+
+/* Sidebar closed on small screens */
+.closed {
+  transform: translateX(-100%);
+}
+
+/* Sidebar open on small screens */
+.open {
+  transform: translateX(0);
+}
+
+/* Toggle button for mobile view */
+.toggleButton {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  background-color: #255b4f;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 8px;
+  font-size: 24px;
+  z-index: 1100;
+  cursor: pointer;
+}
+
+/* User section */
+.user {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 20px;
+  border-bottom: 1px solid #444;
+}
+
+.userImage {
+  margin-top: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  width: 60px;
+  height: 60px;
+}
+
+.userDetail {
+  display: flex;
+  flex-direction: column;
+}
+
+.username {
+  font-weight: 500;
+}
+
+.userTitle {
+  font-size: 12px;
+  color: var(--textSoft);
+}
+
+/* Menu list */
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cat {
+  color: var(--textSoft);
+  font-weight: bold;
+  font-size: 13px;
+  margin: 10px 0px;
+  padding: 10px 20px;
+}
+
+/* Logout button */
+.logout {
+  padding: 20px;
+  margin: 5px 0px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border-radius: 10px;
+  background: none;
+  border: none;
+  color: white;
+  width: 100%;
+  transition: background-color 0.3s;
+}
+
+.logout:hover {
+  background-color: #2e374a;
+}
