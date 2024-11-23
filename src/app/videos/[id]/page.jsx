@@ -1,49 +1,27 @@
-'use client';
+import { notFound } from "next/navigation";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+export default async function VideoPage({ params }) {
+  const { id } = params;
 
-export default function VideoPage() {
-  const [video, setVideo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const router = useRouter();
-  const { id } = router.query; // Capture the dynamic ID from the URL
+  // Fetch video details from API
+  const res = await fetch(`/api/videos`);
+  const data = await res.json();
 
-  useEffect(() => {
-    if (!id) return; // Don't run until we have the ID
-    const fetchVideo = async () => {
-      try {
-        const res = await fetch(`/api/videos-id/${id}`);
-        if (!res.ok) throw new Error('Failed to fetch video');
-        const data = await res.json();
-        setVideo(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (!data.success) return notFound();
 
-    fetchVideo();
-  }, [id]);
-
-  if (loading) return <p>Loading video...</p>;
-  if (error) return <p>Error: {error}</p>;
-
-  if (!video) return <p>Video not found</p>;
+  // Find the video by ID
+  const video = data.videos.find((v) => v.id === id);
+  if (!video) return notFound();
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-4">{video.title}</h1>
-      <div className="flex justify-center mb-4">
-        <video
-          src={video.videoUrl}
-          controls
-          className="w-full md:w-2/3 h-auto"
-        ></video>
-      </div>
-      <p>{video.uploadDate}</p>
+    <div>
+      <h1>{video.id}</h1>
+      <video
+        controls
+        autoPlay
+        src={video.videoUrl}
+        style={{ width: "100%", borderRadius: "8px" }}
+      />
     </div>
   );
 }
