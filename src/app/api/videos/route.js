@@ -1,9 +1,9 @@
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
-  cloud_name: "dne38mnjz",
-  api_key: "666795253571512",
-  api_secret: "piv15VSKOFBU1YHriJ7YYa7TTww",
+  cloud_name: "dzjzkjsiq",
+  api_key: "619215599177211",
+  api_secret: "jgSItJGT8rUlEGl6E9c4Kd1frlY",
 });
 
 export async function GET() {
@@ -15,7 +15,8 @@ export async function GET() {
       .execute();
 
     const videos = result.resources.map((resource) => ({
-      id: resource.public_id,
+      id: resource.public_id, // Unique ID in Cloudinary
+      title: resource.public_id.split("/").pop(), // Extract title from public_id
       videoUrl: resource.secure_url,
       format: resource.format,
       duration: resource.duration,
