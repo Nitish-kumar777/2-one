@@ -1,20 +1,22 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function VideoPage() {
-  const { id } = useParams(); // Get the video ID from the URL
   const [video, setVideo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const router = useRouter();
+  const { id } = router.query; // Capture the dynamic ID from the URL
 
   useEffect(() => {
+    if (!id) return; // Don't run until we have the ID
     const fetchVideo = async () => {
       try {
-        const response = await fetch(`/api/video/${encodeURIComponent(id)}`);
-        if (!response.ok) throw new Error('Failed to fetch video details');
-        const data = await response.json();
+        const res = await fetch(`/api/videos/${id}`);
+        if (!res.ok) throw new Error('Failed to fetch video');
+        const data = await res.json();
         setVideo(data);
       } catch (err) {
         setError(err.message);
@@ -23,22 +25,25 @@ export default function VideoPage() {
       }
     };
 
-    if (id) {
-      fetchVideo();
-    }
+    fetchVideo();
   }, [id]);
 
   if (loading) return <p>Loading video...</p>;
   if (error) return <p>Error: {error}</p>;
 
+  if (!video) return <p>Video not found</p>;
+
   return (
-    <div>
-      <h1>{video.title}</h1>
-      <video controls>
-        <source src={video.videoUrl} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-      <p>Uploaded on: {new Date(video.uploadDate).toLocaleDateString()}</p>
+    <div className="container mx-auto px-4 py-6">
+      <h1 className="text-2xl font-bold mb-4">{video.title}</h1>
+      <div className="flex justify-center mb-4">
+        <video
+          src={video.videoUrl}
+          controls
+          className="w-full md:w-2/3 h-auto"
+        ></video>
+      </div>
+      <p>{video.uploadDate}</p>
     </div>
   );
 }
