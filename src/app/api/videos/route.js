@@ -8,20 +8,18 @@ cloudinary.config({
 
 export async function GET(req) {
   try {
-    // Fetch resources from Cloudinary
+    // Fetch resources from the '18+anime-videos' folder
     const { resources } = await cloudinary.search
       .expression('folder:18+anime-videos/*') // Folder path
       .sort_by('created_at', 'desc') // Sort by most recent
-      .max_results(100) // Limit results
+      .max_results(10) // Limit results to 10
       .execute();
 
-    // Map the results to a structured response
+    // Map Cloudinary resources to a structured response
     const videos = resources.map((resource) => ({
-      id: resource.public_id,
+      id: resource.public_id, // Use the public ID as the unique identifier
       title: resource.public_id.split('/').pop(), // Extract title from public ID
-      thumbnailUrl: cloudinary.url(resource.public_id, { format: 'jpg' }), // Thumbnail
-      videoUrl: resource.secure_url, // Video URL
-      uploadDate: resource.created_at, // Upload date
+      thumbnailUrl: cloudinary.url(resource.public_id, { format: 'jpg' }), // Thumbnail URL
     }));
 
     return new Response(JSON.stringify(videos), { status: 200 });
