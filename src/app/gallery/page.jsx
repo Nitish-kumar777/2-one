@@ -39,11 +39,11 @@ export default function GalleryPage() {
           <div key={video.id} style={{ textAlign: "center" }}>
             <img
               src={video.thumbnailUrl}
-              alt={`Thumbnail of ${video.id}`}
+              alt={`Thumbnail of ${video.title}`}
               style={{ cursor: "pointer", width: "100%", borderRadius: "8px" }}
-              onClick={() => router.push(`/video/${video.id}`)}
+              onClick={() => router.push(`/video/${video.title}`)}
             />
-            <p>{video.id}</p>
+            <p>{video.title}</p> {/* Display title */}
           </div>
         ))}
       </div>
