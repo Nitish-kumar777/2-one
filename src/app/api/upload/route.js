@@ -1,6 +1,6 @@
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary } from "cloudinary";
 
-// Cloudinary configuration
+// Configure Cloudinary
 cloudinary.config({
   cloud_name: "dzjzkjsiq",
   api_key: "619215599177211",
@@ -9,45 +9,55 @@ cloudinary.config({
 
 export async function POST(req) {
   try {
-    const { videoData, title, thumbnailData, previewDuration = 5 } = await req.json();
+    const formData = await req.formData();
+    const videoFile = formData.get("videoFile");
+    const thumbnailFile = formData.get("thumbnailFile");
+    const title = formData.get("title");
 
-    // Validation
-    if (!videoData || !title) {
-      return new Response(JSON.stringify({ error: 'Video data and title are required.' }), { status: 400 });
+    if (!videoFile || !title) {
+      return new Response(JSON.stringify({ error: "Video file and title are required." }), { status: 400 });
     }
 
-    // Step 1: Upload the video to Cloudinary
-    const uploadResponse = await cloudinary.uploader.upload(videoData, {
-      resource_type: 'video',
-      folder: '18+anime', // Specify folder
-      public_id: title,   // Use title as public ID
+    // Check file size limit
+    const MAX_FILE_SIZE_MB = 700;
+    if (videoFile.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      return new Response(
+        JSON.stringify({ error: `Video file size exceeds ${MAX_FILE_SIZE_MB} MB.` }),
+        { status: 400 }
+      );
+    }
+
+    // Upload Video to Cloudinary
+    const videoUploadResponse = await cloudinary.uploader.upload(videoFile.path, {
+      resource_type: "video",
+      folder: "18+anime",
+      public_id: title, // Use title as public ID
     });
 
-    // Step 2: Upload the thumbnail if provided
+    // Upload Thumbnail to Cloudinary
     let thumbnailUrl;
-    if (thumbnailData) {
-      const thumbnailResponse = await cloudinary.uploader.upload(thumbnailData, {
-        resource_type: 'image',
-        folder: '18+anime', // Same folder
+    if (thumbnailFile) {
+      const thumbnailUploadResponse = await cloudinary.uploader.upload(thumbnailFile.path, {
+        resource_type: "image",
+        folder: "18+anime",
         public_id: `${title}_thumbnail`, // Append '_thumbnail' to title
       });
-      thumbnailUrl = thumbnailResponse.secure_url;
+      thumbnailUrl = thumbnailUploadResponse.secure_url;
     }
 
-    // Response
+    // Respond with URLs
     return new Response(
       JSON.stringify({
-        url: uploadResponse.secure_url,
-        public_id: uploadResponse.public_id,
+        videoUrl: videoUploadResponse.secure_url,
         thumbnailUrl,
-        previewUrl: `${uploadResponse.secure_url}#t=0,${previewDuration}`, // Video preview
+        publicId: videoUploadResponse.public_id,
       }),
       { status: 200 }
     );
   } catch (error) {
-    console.error('Cloudinary Upload Error:', error.message);
+    console.error("Cloudinary Upload Error:", error.message);
     return new Response(
-      JSON.stringify({ error: 'Failed to upload video. Please try again.' }),
+      JSON.stringify({ error: "Failed to upload. Please try again." }),
       { status: 500 }
     );
   }
