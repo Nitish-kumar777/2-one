@@ -1,23 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function VideoGallery() {
+export default function GalleryPage() {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const res = await fetch('/api/videos');
-        if (!res.ok) throw new Error('Failed to fetch videos');
+        const res = await fetch("/api/videos");
         const data = await res.json();
-        setVideos(data);
-      } catch (err) {
-        setError(err.message);
+        if (data.success) {
+          setVideos(data.videos);
+        } else {
+          alert("Failed to fetch videos: " + data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching videos:", error);
       } finally {
         setLoading(false);
       }
@@ -27,24 +29,21 @@ export default function VideoGallery() {
   }, []);
 
   if (loading) return <p>Loading videos...</p>;
-  if (error) return <p>Error: {error}</p>;
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-4">Video Gallery</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div>
+      <h1>Video Gallery</h1>
+      {videos.length === 0 && <p>No videos found.</p>}
+      <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
         {videos.map((video) => (
-          <div
-            key={video.id}
-            className="video-item cursor-pointer border rounded-lg p-2 hover:shadow-lg"
-            onClick={() => router.push(`/video/${encodeURIComponent(video.id)}`)} // Navigate to the video page
-          >
+          <div key={video.id} style={{ textAlign: "center" }}>
             <img
               src={video.thumbnailUrl}
-              alt={video.title}
-              className="w-full h-48 object-cover rounded-md"
+              alt={`Thumbnail of ${video.id}`}
+              style={{ cursor: "pointer", width: "100%", borderRadius: "8px" }}
+              onClick={() => router.push(`/video/${video.id}`)}
             />
-            <p className="mt-2 text-center font-semibold">{video.title}</p>
+            <p>{video.id}</p>
           </div>
         ))}
       </div>
