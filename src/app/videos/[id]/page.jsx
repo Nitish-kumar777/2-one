@@ -14,7 +14,7 @@ export default function VideoPage() {
     if (!id) return; // Don't run until we have the ID
     const fetchVideo = async () => {
       try {
-        const res = await fetch(`/api/videos/id/${id}`);
+        const res = await fetch(`/api/videos-id/${id}`);
         if (!res.ok) throw new Error('Failed to fetch video');
         const data = await res.json();
         setVideo(data);
