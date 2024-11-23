@@ -8,12 +8,20 @@ export default function VideoUploadForm() {
   const [title, setTitle] = useState('');
   const [uploading, setUploading] = useState(false);
 
+  const MAX_FILE_SIZE_MB = 700;
+
   const handleVideoChange = (e) => {
-    setVideoFile(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file && file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      alert(`Video file size exceeds ${MAX_FILE_SIZE_MB} MB.`);
+    } else {
+      setVideoFile(file);
+    }
   };
 
   const handleThumbnailChange = (e) => {
-    setThumbnailFile(e.target.files[0]);
+    const file = e.target.files[0];
+    setThumbnailFile(file);
   };
 
   const handleUpload = async () => {
@@ -24,31 +32,24 @@ export default function VideoUploadForm() {
 
     setUploading(true);
 
-    const uploadToCloudinary = async (file, uploadPreset) => {
+    try {
+      // Prepare FormData for API request
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "18+anime"); // यहाँ पर अपना preset डालें
-      formData.append("folder", "18+anime-videos"); // फोल्डर जहाँ वीडियो सेव होगा
+      formData.append("videoFile", videoFile);
+      formData.append("thumbnailFile", thumbnailFile);
+      formData.append("title", title);
 
-      const res = await fetch("https://api.cloudinary.com/v1_1/dzjzkjsiq/auto/upload", {
+      const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Upload failed");
-      return await res.json();
-    };
+      if (!response.ok) {
+        throw new Error("Failed to upload");
+      }
 
-    try {
-      // Video Upload
-      const videoResponse = await uploadToCloudinary(videoFile, "video_upload_preset");
-
-      // Thumbnail Upload
-      const thumbnailResponse = await uploadToCloudinary(thumbnailFile, "thumbnail_upload_preset");
-
-      console.log("Video URL:", videoResponse.secure_url);
-      console.log("Thumbnail URL:", thumbnailResponse.secure_url);
-
+      const data = await response.json();
+      console.log("Upload successful:", data);
       alert("Video and Thumbnail uploaded successfully!");
     } catch (error) {
       console.error("Upload failed:", error);
