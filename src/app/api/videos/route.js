@@ -1,4 +1,4 @@
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
   cloud_name: "dzjzkjsiq",
@@ -6,25 +6,36 @@ cloudinary.config({
   api_secret: "jgSItJGT8rUlEGl6E9c4Kd1frlY",
 });
 
-export async function GET(req) {
+export async function GET() {
   try {
-    // Fetch resources from the '18+anime-videos' folder
-    const { resources } = await cloudinary.search
-      .expression('folder:18+anime-videos/*') // Folder path
-      .sort_by('created_at', 'desc') // Sort by most recent
-      .max_results(10) // Limit results to 10
+    const result = await cloudinary.search
+      .expression("folder:all-videos AND resource_type:video")
+      .sort_by("public_id", "desc")
+      .max_results(20)
       .execute();
 
-    // Map Cloudinary resources to a structured response
-    const videos = resources.map((resource) => ({
-      id: resource.public_id, // Use the public ID as the unique identifier
-      title: resource.public_id.split('/').pop(), // Extract title from public ID
-      thumbnailUrl: cloudinary.url(resource.public_id, { format: 'jpg' }), // Thumbnail URL
+    const videos = result.resources.map((resource) => ({
+      id: resource.public_id,
+      videoUrl: resource.secure_url,
+      format: resource.format,
+      duration: resource.duration,
+      created_at: resource.created_at,
+      thumbnailUrl: cloudinary.url(resource.public_id, {
+        resource_type: "video",
+        transformation: [{ width: 300, height: 200, crop: "fill" }],
+        format: "jpg",
+      }),
     }));
 
-    return new Response(JSON.stringify(videos), { status: 200 });
+    return new Response(
+      JSON.stringify({ success: true, videos }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
   } catch (error) {
-    console.error('Cloudinary API Error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch videos' }), { status: 500 });
+    console.error(error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 500 }
+    );
   }
 }
