@@ -5,8 +5,9 @@ import { useState } from "react";
 export default function VideoUploadForm() {
   const [videoFile, setVideoFile] = useState(null);
   const [thumbnailFile, setThumbnailFile] = useState(null);
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const MAX_FILE_SIZE_MB = 700;
 
@@ -30,33 +31,40 @@ export default function VideoUploadForm() {
       return;
     }
 
-    setUploading(true);
+    const formData = new FormData();
+    formData.append("videoFile", videoFile);
+    formData.append("thumbnailFile", thumbnailFile);
+    formData.append("title", title);
 
-    try {
-      // Prepare FormData for API request
-      const formData = new FormData();
-      formData.append("videoFile", videoFile);
-      formData.append("thumbnailFile", thumbnailFile);
-      formData.append("title", title);
+    const xhr = new XMLHttpRequest();
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+    xhr.open("POST", "/api/upload", true);
 
-      if (!response.ok) {
-        throw new Error("Failed to upload");
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = Math.round((event.loaded / event.total) * 100);
+        setUploadProgress(percentComplete);
       }
+    };
 
-      const data = await response.json();
-      console.log("Upload successful:", data);
-      alert("Video and Thumbnail uploaded successfully!");
-    } catch (error) {
-      console.error("Upload failed:", error);
-      alert("Upload failed. Please try again.");
-    } finally {
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        alert("Video and Thumbnail uploaded successfully!");
+      } else {
+        alert("Upload failed. Please try again.");
+      }
       setUploading(false);
-    }
+      setUploadProgress(0);
+    };
+
+    xhr.onerror = () => {
+      alert("Upload failed. Please try again.");
+      setUploading(false);
+      setUploadProgress(0);
+    };
+
+    setUploading(true);
+    xhr.send(formData);
   };
 
   return (
@@ -85,12 +93,21 @@ export default function VideoUploadForm() {
         className="w-full p-2 mb-4 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
 
+      {uploading && (
+        <div className="w-full bg-gray-700 rounded h-4 mb-4">
+          <div
+            className="bg-teal-500 h-4 rounded"
+            style={{ width: `${uploadProgress}%` }}
+          ></div>
+        </div>
+      )}
+
       <button
         onClick={handleUpload}
         className="w-full py-2 bg-teal-600 text-white font-semibold rounded hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
         disabled={uploading}
       >
-        {uploading ? "Uploading..." : "Upload Video"}
+        {uploading ? `Uploading... ${uploadProgress}%` : "Upload Video"}
       </button>
     </div>
   );
