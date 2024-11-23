@@ -1,9 +1,7 @@
-import { notFound } from "next/navigation";
-
 export default async function VideoPage({ params }) {
   const { id } = params;
 
-  // Fetch video details from API
+  // Fetch video details from relative API route
   const res = await fetch(`/api/videos`);
   const data = await res.json();
 
