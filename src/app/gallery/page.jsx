@@ -37,7 +37,7 @@ export default function VideoGallery() {
           <div
             key={video.id}
             className="video-item cursor-pointer border rounded-lg p-2 hover:shadow-lg"
-            onClick={() => router.push(`/video/${encodeURIComponent(video.id)}`)}
+            onClick={() => router.push(`/video/${encodeURIComponent(video.id)}`)} // Navigate to the video page
           >
             <img
               src={video.thumbnailUrl}
