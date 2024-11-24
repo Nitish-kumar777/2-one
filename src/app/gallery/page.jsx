@@ -1,49 +1,27 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
-export default function GalleryPage() {
+export default function VideoGallery() {
   const [videos, setVideos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        const res = await fetch("/api/videos");
-        const data = await res.json();
-        if (data.success) {
-          setVideos(data.videos);
-        } else {
-          alert("Failed to fetch videos: " + data.error);
-        }
-      } catch (error) {
-        console.error("Error fetching videos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVideos();
+    fetch('/api/getVideos')
+      .then((res) => res.json())
+      .then(setVideos);
   }, []);
-
-  if (loading) return <p>Loading videos...</p>;
 
   return (
     <div>
       <h1>Video Gallery</h1>
-      {videos.length === 0 && <p>No videos found.</p>}
-      <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+      <div className="gallery">
         {videos.map((video) => (
-          <div key={video.id} style={{ textAlign: "center" }}>
-            <img
-              src={video.thumbnailUrl}
-              alt={`Thumbnail of ${video.title}`}
-              style={{ cursor: "pointer", width: "100%", borderRadius: "8px" }}
-              onClick={() => router.push(`/video/${video.title}`)}
-            />
-            <p>{video.title}</p> {/* Display title */}
+          <div key={video.id} className="video-item">
+            <Link href={`/videos/${video.id}`}>
+              <img src={video.thumbnailUrl} alt={video.title} />
+            </Link>
+            <p>{video.title}</p>
           </div>
         ))}
       </div>
