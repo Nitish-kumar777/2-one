@@ -7,7 +7,7 @@ export default function VideoGallery() {
   const [videos, setVideos] = useState([]);
 
   useEffect(() => {
-    fetch('/api/getVideos')
+    fetch('/api/videos')
       .then((res) => res.json())
       .then(setVideos);
   }, []);
